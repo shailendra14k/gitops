@@ -1,0 +1,26 @@
+apiVersion: apps/v1 
+kind: Deployment 
+metadata: 
+  name: getotp
+  labels: 
+    app: getotp 
+    version: v6.0
+spec: 
+  replicas: 1 
+  selector: 
+    matchLabels: 
+      app: getotp 
+  template: 
+    metadata: 
+      labels: 
+        app: getotp
+        version: v6.0
+      annotations:
+        sidecar.istio.io/inject: 'true'
+    spec: 
+      containers: 
+      - name: getotp 
+        image: getotp
+        imagePullPolicy: Always 
+        ports: 
+        - containerPort: 8180

@@ -1,0 +1,243 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: new-pipeline
+spec:
+  tasks:
+    - name: git-clone
+      params:
+        - name: url
+          value: 'https://github.com/shailendra14k/Demo.git'
+        - name: revision
+          value: ''
+        - name: refspec
+          value: ''
+        - name: submodules
+          value: 'true'
+        - name: depth
+          value: '1'
+        - name: sslVerify
+          value: 'true'
+        - name: crtFileName
+          value: ca-bundle.crt
+        - name: subdirectory
+          value: ''
+        - name: sparseCheckoutDirectories
+          value: ''
+        - name: deleteExisting
+          value: 'true'
+        - name: httpProxy
+          value: ''
+        - name: httpsProxy
+          value: ''
+        - name: noProxy
+          value: ''
+        - name: verbose
+          value: 'true'
+        - name: gitInitImage
+          value: >-
+            registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:c4b2183f7c7997bd401d86b33eefb637b3ef2fa90618e875106292cd69a15c14
+        - name: userHome
+          value: /home/git
+      taskRef:
+        kind: ClusterTask
+        name: git-clone-custom
+      workspaces:
+        - name: output
+          workspace: my-workspace
+    - name: maven-build
+      params:
+        - name: MAVEN_IMAGE
+          value: >-
+            registry.redhat.io/ubi8/openjdk-17@sha256:af305e087061cbaa4107ce0b304a1ef987f6b54bae3f75bfd529cfd084cba9b5
+        - name: GOALS
+          value:
+            - package
+        - name: MAVEN_MIRROR_URL
+          value: ''
+        - name: SERVER_USER
+          value: admin
+        - name: SERVER_PASSWORD
+          value: admin123
+        - name: PROXY_USER
+          value: ''
+        - name: PROXY_PASSWORD
+          value: ''
+        - name: PROXY_PORT
+          value: ''
+        - name: PROXY_HOST
+          value: ''
+        - name: PROXY_NON_PROXY_HOSTS
+          value: ''
+        - name: PROXY_PROTOCOL
+          value: http
+        - name: CONTEXT_DIR
+          value: GetOTP
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: ClusterTask
+        name: maven-custom
+      workspaces:
+        - name: source
+          workspace: my-workspace
+        - name: maven-settings
+          workspace: maven-settings
+    - name: code-analysis
+      params:
+        - name: MAVEN_IMAGE
+          value: >-
+            registry.redhat.io/ubi8/openjdk-17@sha256:af305e087061cbaa4107ce0b304a1ef987f6b54bae3f75bfd529cfd084cba9b5
+        - name: GOALS
+          value:
+            - install
+            - 'sonar:sonar'
+            - '-Dsonar.host.url=http://sonarqube-sonarqube:9000'
+            - '-Dsonar.userHome=/tmp/sonar'
+            - '-DskipTests=true'
+        - name: MAVEN_MIRROR_URL
+          value: ''
+        - name: SERVER_USER
+          value: admin
+        - name: SERVER_PASSWORD
+          value: admin123
+        - name: PROXY_USER
+          value: ''
+        - name: PROXY_PASSWORD
+          value: ''
+        - name: PROXY_PORT
+          value: ''
+        - name: PROXY_HOST
+          value: ''
+        - name: PROXY_NON_PROXY_HOSTS
+          value: ''
+        - name: PROXY_PROTOCOL
+          value: http
+        - name: CONTEXT_DIR
+          value: GetOTP
+      runAfter:
+        - maven-build
+      taskRef:
+        kind: ClusterTask
+        name: maven-custom
+      workspaces:
+        - name: source
+          workspace: my-workspace
+        - name: maven-settings
+          workspace: maven-settings
+    - name: archive-app
+      params:
+        - name: MAVEN_IMAGE
+          value: >-
+            registry.redhat.io/ubi8/openjdk-17@sha256:af305e087061cbaa4107ce0b304a1ef987f6b54bae3f75bfd529cfd084cba9b5
+        - name: GOALS
+          value:
+            - deploy
+            - '-DskipTests=true'
+        - name: MAVEN_MIRROR_URL
+          value: ''
+        - name: SERVER_USER
+          value: admin
+        - name: SERVER_PASSWORD
+          value: admin123
+        - name: PROXY_USER
+          value: ''
+        - name: PROXY_PASSWORD
+          value: ''
+        - name: PROXY_PORT
+          value: ''
+        - name: PROXY_HOST
+          value: ''
+        - name: PROXY_NON_PROXY_HOSTS
+          value: ''
+        - name: PROXY_PROTOCOL
+          value: http
+        - name: CONTEXT_DIR
+          value: GetOTP
+      runAfter:
+        - code-analysis
+      taskRef:
+        kind: ClusterTask
+        name: maven-custom
+      workspaces:
+        - name: source
+          workspace: my-workspace
+        - name: maven-settings
+          workspace: maven-settings
+    - name: build-image
+      params:
+        - name: IMAGE
+          value: 'image-registry.openshift-image-registry.svc:5000/demo/getotp'
+        - name: TOKEN
+          value: xxxx
+        - name: BUILDER_IMAGE
+          value: >-
+            registry.redhat.io/rhel8/buildah@sha256:55f5c7d88c77e1ab5a2ab8e877172b2b66cb196e21f10dc45148470d0ee8bbae
+        - name: STORAGE_DRIVER
+          value: vfs
+        - name: DOCKERFILE
+          value: ./Dockerfile
+        - name: CONTEXT
+          value: GetOTP
+        - name: TLSVERIFY
+          value: 'true'
+        - name: FORMAT
+          value: oci
+        - name: BUILD_EXTRA_ARGS
+          value: ''
+        - name: PUSH_EXTRA_ARGS
+          value: ''
+        - name: SKIP_PUSH
+          value: 'false'
+      runAfter:
+        - archive-app
+      taskRef:
+        kind: ClusterTask
+        name: buildah-custom
+      workspaces:
+        - name: source
+          workspace: my-workspace
+    - name: acs-image-scan
+      params:
+        - name: rox_central_endpoint
+          value: 'central-stackrox.apps.shailendra14k.in:443'
+        - name: rox_api_token
+          value: xxxxx
+        - name: image
+          value: 'image-registry.openshift-image-registry.svc:5000/demo/getotp'
+        - name: output_format
+          value: json
+        - name: image_digest
+          value: $(tasks.build-image.results.IMAGE_DIGEST)
+      runAfter:
+        - build-image
+      taskRef:
+        kind: ClusterTask
+        name: rox-image-scan
+    - name: git-update-deployment
+      params:
+        - name: GIT_REPOSITORY
+          value: 'https://github.com/shailendra14k/gitops.git'
+        - name: GIT_USERNAME
+          value: xxxxx
+        - name: GIT_PASSWORD
+          value: xxxxxx
+        - name: CURRENT_IMAGE
+          value: getotp
+        - name: NEW_IMAGE
+          value: 'image-registry.openshift-image-registry.svc:5000/demo/getotp'
+        - name: NEW_DIGEST
+          value: $(tasks.build-image.results.IMAGE_DIGEST)
+        - name: KUSTOMIZATION_PATH
+          value: getOtp
+      runAfter:
+        - acs-image-scan
+      taskRef:
+        kind: Task
+        name: git-update-deployment
+      workspaces:
+        - name: workspace
+          workspace: my-workspace
+  workspaces:
+    - name: my-workspace
+    - name: maven-settings

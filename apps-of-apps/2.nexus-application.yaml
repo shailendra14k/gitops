@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nexus
+  namespace: openshift-gitops
+spec:
+  destination:
+    namespace: cicd
+    server: 'https://kubernetes.default.svc'
+  project: default
+  source:
+    path: charts/sonatype-nexus
+    repoURL: 'https://github.com/redhat-cop/helm-charts.git'
+    targetRevision: HEAD

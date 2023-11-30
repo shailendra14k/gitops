@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sonarqube
+  namespace: openshift-gitops
+spec:
+  destination:
+    namespace: cicd
+    server: 'https://kubernetes.default.svc'
+  project: default
+  source:
+    helm:
+      parameters:
+        - name: postgresql.image.tag
+          value: latest
+    path: charts/sonarqube
+    repoURL: 'https://github.com/redhat-cop/helm-charts.git'
+    targetRevision: HEAD

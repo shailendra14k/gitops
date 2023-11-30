@@ -1,0 +1,13 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: getotp
+spec:
+  host: demo.apps.shailendra14k.in
+  path: /getotp
+  port:
+    targetPort: 8180
+  to:
+    kind: Service
+    name: getotpservice
+    weight: 100

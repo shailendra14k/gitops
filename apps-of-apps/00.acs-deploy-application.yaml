@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: acs-deploy
+  namespace: openshift-gitops
+spec:
+  destination:
+    server: 'https://kubernetes.default.svc'
+  project: default
+  source:
+    path: acs-deploy
+    repoURL: 'https://github.com/shailendra14k/gitops.git'
+    targetRevision: HEAD
+  syncPolicy: {}

@@ -1,0 +1,25 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+ name: getotp-demo-trigger-pipeline-template
+spec:
+ params:
+ - name: gitrevision
+ - name: gitrepositoryurl
+ - name: pull_request_title
+ resourcetemplates:
+ - apiVersion: tekton.dev/v1beta1
+   kind: PipelineRun
+   metadata:
+     generateName: getotp-demo-run-pr-tr-
+   spec:
+     pipelineRef:
+       name: new-pipeline
+     serviceAccountName: pipeline
+     workspaces:
+      - name: my-workspace
+        persistentVolumeClaim:
+          claimName: my-workshop
+      - name: maven-settings
+        persistentVolumeClaim:
+          claimName: maven-settings

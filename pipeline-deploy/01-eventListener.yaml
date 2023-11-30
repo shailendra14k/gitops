@@ -1,0 +1,12 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+ name: getotp-demo-github-listener-interceptor
+spec:
+ serviceAccountName: pipeline
+ triggers:
+   - name: GitHub-listener
+     bindings:
+       - ref: getotp-demo-pipeline-binding
+     template:
+       ref: getotp-demo-trigger-pipeline-template
