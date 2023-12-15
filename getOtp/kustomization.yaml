@@ -8,4 +8,4 @@ images:
 - newName: image-registry.openshift-image-registry.svc:5000/demo/getotp@sha256:e8cf8f8e526bfdc25fa14a8c7c0a3fefd237c9e71c5f58b5261224d91c37591f
 - name: getotp
   newName: image-registry.openshift-image-registry.svc:5000/demo/getotp
-  newTag: a2d334e
+  newTag: bfd25ab
