@@ -3,7 +3,7 @@ kind: Route
 metadata:
   name: getotp
 spec:
-  host: demo.apps.shailendra14k.in
+  host: demo-argocd.apps.cluster-zhwqt.dynamic2.redhatworkshops.io
   path: /getotp
   port:
     targetPort: 8180
