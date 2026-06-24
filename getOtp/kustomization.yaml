@@ -7,4 +7,4 @@ resources:
 images:
 - name: getotp
   newName: quay.io/shailendra14k/getotp
-  newTag: "19.0"
+  newTag: "14.0"
