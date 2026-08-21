@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sentiment-ui
+stringData:
+  infer-url: https://sentiment-v2-serving-modelregistry.apps.lab.example.com/v2/models/sentiment-v2/infer            
+  /infer
+  infer-token: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentiment-ui
+  labels:
+    app: sentiment-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sentiment-ui
+  template:
+    metadata:
+      labels:
+        app: sentiment-ui
+    spec:
+      containers:
+        - name: ui
+          image: quay.io/shailendra14k/ai-u1:v1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: INFER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sentiment-ui
+                  key: infer-url
+            - name: INFER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: sentiment-ui
+                  key: infer-token
+            - name: INFER_VERIFY_SSL
+              value: "false"
+            - name: PORT
+              value: "8080"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentiment-ui
+spec:
+  selector:
+    app: sentiment-ui
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: sentiment-ui
+spec:
+  to:
+    kind: Service
+    name: sentiment-ui
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
