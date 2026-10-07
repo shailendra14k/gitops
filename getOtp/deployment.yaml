@@ -6,6 +6,13 @@ metadata:
     app: getotp 
     version: v6.0
 spec: 
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "1000m"
   replicas: 1 
   selector: 
     matchLabels: 
