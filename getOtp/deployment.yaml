@@ -6,13 +6,6 @@ metadata:
     app: getotp 
     version: v6.0
 spec: 
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "500m"
-    limits:
-      memory: "4Gi"
-      cpu: "1000m"
   replicas: 1 
   selector: 
     matchLabels: 
@@ -28,6 +21,13 @@ spec:
       containers: 
       - name: getotp 
         image: getotp
-        imagePullPolicy: Always 
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "1000m"
         ports: 
         - containerPort: 8180
